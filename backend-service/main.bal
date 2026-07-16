@@ -47,6 +47,7 @@ service / on httpDefaultListener {
     resource function get invokeWithTimeout() returns json|http:InternalServerError {
         do {
             // Invoke the backend with GET request and 5 seconds timeout
+            log:printWarn("Invoking backend endpoint with 5 seconds timeout");
             json response = check backendClientWithTimeout->/["19250b4e-2881-47ea-8f0d-584b1012f02c"]();
 
             // Log the response
