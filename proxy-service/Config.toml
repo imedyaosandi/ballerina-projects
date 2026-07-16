@@ -1,0 +1,6 @@
+# Optional overrides for the default backend URLs / port defined in main.bal.
+# Uncomment and edit as needed, then run with: bal run --b7a.config.file=Config.toml
+
+# endpoint1Backend = "https://webhook.site/19250b4e-2881-47ea-8f0d-584b1012f02c"
+# endpoint2Backend = "https://webhook.site/fcda4a0b-4176-4f4e-9070-f1af24d8a4df"
+# servicePort = 8080
