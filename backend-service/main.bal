@@ -7,6 +7,8 @@ listener http:Listener httpDefaultListener = http:getDefaultListener();
 
 final http:Client backendClient = check new ("https://webhook.site");
 
+final http:Client backendClientWithTimeout = check new ("https://webhook.site", timeout = 5);
+
 service / on httpDefaultListener {
 
     resource function post convert(@http:Payload json payload) returns xml|http:BadRequest {
@@ -38,6 +40,21 @@ service / on httpDefaultListener {
 
         } on fail error err {
             log:printError("Failed to invoke backend: " + err.message());
+            return http:INTERNAL_SERVER_ERROR;
+        }
+    }
+
+    resource function get invokeWithTimeout() returns json|http:InternalServerError {
+        do {
+            // Invoke the backend with GET request and 5 seconds timeout
+            json response = check backendClientWithTimeout->/["19250b4e-2881-47ea-8f0d-584b1012f02c"]();
+
+            // Log the response
+            io:println("Backend response with timeout: ", response.toJsonString());
+            return response;
+
+        } on fail error err {
+            log:printError("Failed to invoke backend with timeout: " + err.message());
             return http:INTERNAL_SERVER_ERROR;
         }
     }
