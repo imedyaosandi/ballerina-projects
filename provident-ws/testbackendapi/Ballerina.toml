@@ -1,0 +1,8 @@
+[package]
+org = "imedya"
+name = "testbackendapi"
+version = "0.1.0"
+title = "testBackendAPI"
+
+[build-options]
+sticky = true
