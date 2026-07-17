@@ -92,4 +92,15 @@ service / on httpDefaultListener {
             return http:INTERNAL_SERVER_ERROR;
         }
     }
+
+    resource function get redirect() returns http:Found {
+        http:Found redirectResponse = {
+            body: "Redirecting to new location",
+            headers: {
+                "Location": "https://webhook.site/c07f2fed-0554-402e-8728-beeb73d68e04"
+            }
+        };
+        log:printInfo("Redirecting client with 302 status");
+        return redirectResponse;
+    }
 }
