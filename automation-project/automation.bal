@@ -25,7 +25,7 @@ public function main() returns error? {
 
         // Invoke webhook.site backend
         io:println("Invoking webhook.site...");
-        string webhookResponse = check webhookClient->get("/fcda4a0b-4176-4f4e-9070-f1af24d8a4df");
+        string webhookResponse = check webhookClient->get("/19250b4e-2881-47ea-8f0d-584b1012f02c");
         io:println("Webhook response received: ", webhookResponse);
 
         // Prepare data to send to second backend
