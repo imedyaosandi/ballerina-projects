@@ -30,9 +30,11 @@ service / on httpDefaultListener {
     }
 
     resource function get invoke(http:Request req) returns json|http:InternalServerError {
+        // Extract correlation ID from request headers
+        string|error correlationIdResult = req.getHeader("x-correlation-id");
+        string correlationId = correlationIdResult is string ? correlationIdResult : "N/A";
+        
         do {
-            // Extract correlation ID from request headers
-            string correlationId = req.hasHeader("x-correlation-id") ? check req.getHeader("x-correlation-id") : "N/A";
             log:printInfo("Processing request with correlation ID: " + correlationId);
 
             // Invoke the backend with GET request
@@ -43,15 +45,17 @@ service / on httpDefaultListener {
             return response;
 
         } on fail error err {
-            log:printError("Failed to invoke backend: " + err.message());
+            log:printError("Failed to invoke backend for correlation ID " + correlationId + ": " + err.message());
             return http:INTERNAL_SERVER_ERROR;
         }
     }
 
     resource function get invokeWithTimeout(http:Request req) returns json|http:InternalServerError {
+        // Extract correlation ID from request headers
+        string|error correlationIdResult = req.getHeader("x-correlation-id");
+        string correlationId = correlationIdResult is string ? correlationIdResult : "N/A";
+        
         do {
-            // Extract correlation ID from request headers
-            string correlationId = req.hasHeader("x-correlation-id") ? check req.getHeader("x-correlation-id") : "N/A";
             log:printInfo("Processing request with correlation ID: " + correlationId);
 
             // Invoke the backend with GET request and 5 seconds timeout
@@ -63,15 +67,17 @@ service / on httpDefaultListener {
             return response;
 
         } on fail error err {
-            log:printError("Failed to invoke backend with timeout: " + err.message());
+            log:printError("Failed to invoke backend with timeout for correlation ID " + correlationId + ": " + err.message());
             return http:INTERNAL_SERVER_ERROR;
         }
     }
 
     resource function get invokeAlternate(http:Request req) returns json|http:InternalServerError {
+        // Extract correlation ID from request headers
+        string|error correlationIdResult = req.getHeader("x-correlation-id");
+        string correlationId = correlationIdResult is string ? correlationIdResult : "N/A";
+        
         do {
-            // Extract correlation ID from request headers
-            string correlationId = req.hasHeader("x-correlation-id") ? check req.getHeader("x-correlation-id") : "N/A";
             log:printInfo("Processing alternate request with correlation ID: " + correlationId);
 
             // Invoke the alternate backend endpoint
@@ -82,7 +88,7 @@ service / on httpDefaultListener {
             return response;
 
         } on fail error err {
-            log:printError("Failed to invoke alternate backend: " + err.message());
+            log:printError("Failed to invoke alternate backend for correlation ID " + correlationId + ": " + err.message());
             return http:INTERNAL_SERVER_ERROR;
         }
     }

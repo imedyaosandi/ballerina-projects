@@ -13,10 +13,15 @@ type ProcessedData record {
 };
 
 public function main() returns error? {
+    string webhookRequestId = "N/A";
+    string webhookCorrelationId = "N/A";
+    string domainRequestId = "N/A";
+    string domainCorrelationId = "N/A";
+
     do {
         io:println("Starting file processing...");
 
-        string filePath = "sample.txt";
+        //string filePath = "sample.txt";
         string fileContent = "test new file content"; // Placeholder for actual file reading logic
         string[] words = regexp:split(re `\s+`, fileContent);
         int wordCount = words.length();
@@ -25,19 +30,31 @@ public function main() returns error? {
 
         // Invoke webhook.site backend
         io:println("Invoking webhook.site...");
-        string webhookResponse = check webhookClient->get("/19250b4e-2881-47ea-8f0d-584b1012f02c");
+        http:Response webhookHttpResponse = check webhookClient->get("/19250b4e-2881-47ea-8f0d-584b1012f02c");
+        
+        // Log request/correlation ID from webhook response
+        webhookRequestId = webhookHttpResponse.hasHeader("x-request-id") ? 
+            check webhookHttpResponse.getHeader("x-request-id") : "N/A";
+        webhookCorrelationId = webhookHttpResponse.hasHeader("x-correlation-id") ? 
+            check webhookHttpResponse.getHeader("x-correlation-id") : "N/A";
+        io:println("Webhook Request ID: ", webhookRequestId);
+        io:println("Webhook Correlation ID: ", webhookCorrelationId);
+        
+        string webhookResponse = check webhookHttpResponse.getTextPayload();
         io:println("Webhook response received: ", webhookResponse);
 
-        // Prepare data to send to second backend
-        ProcessedData processedData = {
-            fileName: filePath,
-            wordCount: wordCount,
-            webhookResponse: webhookResponse
-        };
 
         // Invoke test123.domain.com backend
         io:println("Invoking test123.domain.com...");
-        http:Response domainResponse = check domainClient->post("/", processedData);
+        http:Response domainResponse = check domainClient->post("/", webhookResponse);
+        
+        // Log request/correlation ID from domain response
+        domainRequestId = domainResponse.hasHeader("x-request-id") ? 
+            check domainResponse.getHeader("x-request-id") : "N/A";
+        domainCorrelationId = domainResponse.hasHeader("x-correlation-id") ? 
+            check domainResponse.getHeader("x-correlation-id") : "N/A";
+        io:println("Domain Request ID: ", domainRequestId);
+        io:println("Domain Correlation ID: ", domainCorrelationId);
         io:println("Domain backend response status: ", domainResponse.statusCode);
         
         string domainResponseBody = check domainResponse.getTextPayload();
@@ -45,7 +62,11 @@ public function main() returns error? {
 
         io:println("All operations completed successfully.");
     } on fail error e {
-        log:printError("File processing failed: " + e.message());
+        log:printError("File processing failed: " + e.message() + 
+            " | Webhook Request ID: " + webhookRequestId + 
+            " | Webhook Correlation ID: " + webhookCorrelationId + 
+            " | Domain Request ID: " + domainRequestId + 
+            " | Domain Correlation ID: " + domainCorrelationId);
         return e;
     }
 }
