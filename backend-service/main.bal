@@ -67,4 +67,23 @@ service / on httpDefaultListener {
             return http:INTERNAL_SERVER_ERROR;
         }
     }
+
+    resource function get invokeAlternate(http:Request req) returns json|http:InternalServerError {
+        do {
+            // Extract correlation ID from request headers
+            string correlationId = req.hasHeader("x-correlation-id") ? check req.getHeader("x-correlation-id") : "N/A";
+            log:printInfo("Processing alternate request with correlation ID: " + correlationId);
+
+            // Invoke the alternate backend endpoint
+            json response = check backendClient->/["c07f2fed-0554-402e-8728-beeb73d68e04"]();
+
+            // Log the response with correlation ID
+            io:println("Alternate backend response for correlation ID " + correlationId + ": ", response.toJsonString());
+            return response;
+
+        } on fail error err {
+            log:printError("Failed to invoke alternate backend: " + err.message());
+            return http:INTERNAL_SERVER_ERROR;
+        }
+    }
 }
