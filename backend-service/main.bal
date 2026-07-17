@@ -29,13 +29,17 @@ service / on httpDefaultListener {
         }
     }
 
-    resource function get invoke() returns json|http:InternalServerError {
+    resource function get invoke(http:Request req) returns json|http:InternalServerError {
         do {
+            // Extract correlation ID from request headers
+            string correlationId = req.hasHeader("x-correlation-id") ? check req.getHeader("x-correlation-id") : "N/A";
+            log:printInfo("Processing request with correlation ID: " + correlationId);
+
             // Invoke the backend with GET request
             json response = check backendClient->/["19250b4e-2881-47ea-8f0d-584b1012f02c"]();
 
-            // Log the response
-            io:println("Backend response: ", response.toJsonString());
+            // Log the response with correlation ID
+            io:println("Backend response for correlation ID " + correlationId + ": ", response.toJsonString());
             return response;
 
         } on fail error err {
@@ -44,14 +48,18 @@ service / on httpDefaultListener {
         }
     }
 
-    resource function get invokeWithTimeout() returns json|http:InternalServerError {
+    resource function get invokeWithTimeout(http:Request req) returns json|http:InternalServerError {
         do {
+            // Extract correlation ID from request headers
+            string correlationId = req.hasHeader("x-correlation-id") ? check req.getHeader("x-correlation-id") : "N/A";
+            log:printInfo("Processing request with correlation ID: " + correlationId);
+
             // Invoke the backend with GET request and 5 seconds timeout
-            log:printWarn("Invoking backend endpoint with 5 seconds timeout");
+            log:printWarn("Invoking backend endpoint with 5 seconds timeout for correlation ID: " + correlationId);
             json response = check backendClientWithTimeout->/["19250b4e-2881-47ea-8f0d-584b1012f02c"]();
 
-            // Log the response
-            io:println("Backend response with timeout: ", response.toJsonString());
+            // Log the response with correlation ID
+            io:println("Backend response with timeout for correlation ID " + correlationId + ": ", response.toJsonString());
             return response;
 
         } on fail error err {
