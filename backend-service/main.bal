@@ -12,6 +12,8 @@ final http:Client backendClient = check new ("https://webhook.site");
 
 final http:Client backendClientWithTimeout = check new ("https://webhook.site", timeout = 5);
 
+final http:Client localClient = check new ("https://localhost:9091");
+
 service / on httpDefaultListener {
 
     resource function post convert(@http:Payload json payload) returns xml|http:BadRequest|http:InternalServerError {
@@ -165,6 +167,40 @@ service / on httpDefaultListener {
             
         } on fail error err {
             log:printError("Failed to access credentials", 'error = err);
+            return http:INTERNAL_SERVER_ERROR;
+        }
+    }
+
+    resource function get local(http:Request req) returns json|http:InternalServerError|http:ServiceUnavailable|http:RequestTimeout {
+        // Extract correlation ID from request headers
+        string|error correlationIdResult = req.getHeader("x-correlation-id");
+        string correlationId = correlationIdResult is string ? correlationIdResult : "N/A";
+        
+        do {
+            log:printInfo("Processing local request with correlation ID: " + correlationId);
+
+            // Invoke the local backend endpoint
+            json response = check localClient->/();
+
+            // Log the response with correlation ID
+            io:println("Local backend response for correlation ID " + correlationId + ": ", response.toJsonString());
+            return response;
+
+        } on fail error err {
+            log:printError("Failed to invoke local backend for correlation ID " + correlationId, 'error = err);
+            
+            // Check for specific error types
+            string errorMsg = err.message().toLowerAscii();
+            if errorMsg.includes("timeout") {
+                log:printError("Request timeout for local backend with correlation ID " + correlationId);
+                return http:REQUEST_TIMEOUT;
+            }
+            
+            if errorMsg.includes("connection") || errorMsg.includes("unavailable") {
+                log:printError("Local backend service unavailable for correlation ID " + correlationId);
+                return http:SERVICE_UNAVAILABLE;
+            }
+            
             return http:INTERNAL_SERVER_ERROR;
         }
     }
